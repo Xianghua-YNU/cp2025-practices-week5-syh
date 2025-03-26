@@ -5,59 +5,83 @@ plt.rcParams['font.sans-serif'] = ['SimHei']
 
 plt.rcParams['axes.unicode_minus'] = False
 
-def generate_coin_tosses(n, p):
-    if not isinstance(n, int) or n <= 0:
-        raise ValueError("抛硬币的次数 n 必须为正整数。")
-    if not (0 <= p <= 1):
-        raise ValueError("正面朝上的概率 p 必须在 0 到 1 之间。")
-    return np.random.choice([0, 1], size=n, p=[1 - p, p])
+
+def generate_coin_sequence(n_flips, p_head=0.08):
+    return np.random.choice([0, 1], size=n_flips, p=[1 - p_head, p_head])
 
 
-def calculate_waiting_times(tosses):
-    heads_indices = np.nonzero(tosses)[0]
-    if len(heads_indices) < 2:
-        return np.array([])
-    return np.diff(heads_indices).flatten()
+def calculate_waiting_times(coin_sequence):
+    head_indices = np.nonzero(coin_sequence)[0]
+
+    waiting_times = np.diff(head_indices) - 1
+    return waiting_times
 
 
-def plot_histograms(waiting_times, title):
-    if len(waiting_times) == 0:
-        print(f"{title} 中没有足够的正面出现以计算等待时间，无法绘制直方图。")
-        return
-    plt.figure(figsize=(12, 5))
+def plot_waiting_time_histogram(waiting_times, log_scale=False, n_flips=None):
+    plt.figure(figsize=(10, 6))
 
-    plt.subplot(1, 2, 1)
-    plt.hist(waiting_times, bins=20, edgecolor='k')
-    plt.title(f'{title} - 等待时间直方图')
-    plt.xlabel('等待时间')
-    plt.ylabel('频数')
+    max_wait = max(waiting_times) if len(waiting_times) > 0 else 0
+    bins = np.arange(0, max_wait + 2) - 0.5
 
-    plt.subplot(1, 2, 2)
-    plt.hist(waiting_times, bins=20, edgecolor='k', log=True)
-    plt.title(f'{title} - 半对数坐标等待时间直方图')
-    plt.xlabel('等待时间')
-    plt.ylabel('频数 (对数坐标)')
+    plt.hist(waiting_times, bins=bins, density=True, alpha=0.7)
+    plt.xlabel('等待时间（反面次数）')
+    plt.ylabel('频率' if not log_scale else '频率（对数刻度）')
 
-    plt.tight_layout()
+    if log_scale:
+        plt.yscale('log')
+        title = '等待时间分布（半对数刻度）'
+    else:
+        title = '等待时间分布'
+
+    if n_flips is not None:
+        title += f' - {n_flips:,} 次抛硬币'
+
+    plt.title(title)
+    plt.grid(True, alpha=0.3)
     plt.show()
 
 
-def run_experiment(n, p, title):
-    try:
-        tosses = generate_coin_tosses(n, p)
-        waiting_times = calculate_waiting_times(tosses)
-        plot_histograms(waiting_times, title)
+def analyze_waiting_time(waiting_times):
+    if len(waiting_times) == 0:
+        return {"mean": None, "std": None, "theoretical_mean": None, "exponential_mean": None}
 
-        if len(waiting_times) > 0:
-            average_waiting_time = np.mean(waiting_times)
-            theoretical_waiting_time = 1 / p
-            print(f'{title} - 平均等待时间: {average_waiting_time}')
-            print(f'{title} - 理论等待时间: {theoretical_waiting_time}')
-        else:
-            print(f"{title} 中没有足够的正面出现以计算等待时间。")
-    except ValueError as e:
-        print(f"实验 {title} 出错: {e}")
+    mean_wait = np.mean(waiting_times)
+    std_wait = np.std(waiting_times)
 
-run_experiment(1000, 0.08, '基础实验（1000 次抛掷）')
+    p_head = 0.08  # 硬币正面概率
+    theoretical_mean = (1 - p_head) / p_head
 
-run_experiment(1000000, 0.08, '大样本实验（1000000 次抛掷）')
+    exponential_mean = 1 / p_head  # 1/λ = 1/0.08 = 12.5
+
+    return {
+        "mean": mean_wait,
+        "std": std_wait,
+        "theoretical_mean": theoretical_mean,
+        "exponential_mean": exponential_mean
+    }
+
+
+def run_experiment(n_flips, title):
+    print(f"===== {title} =====")
+
+    coin_sequence = generate_coin_sequence(n_flips)
+    waiting_times = calculate_waiting_times(coin_sequence)
+
+    stats = analyze_waiting_time(waiting_times)
+    print(f"平均等待时间: {stats['mean']:.2f}")
+    print(f"理论平均等待时间（几何分布）: {stats['theoretical_mean']:.2f}")
+    print(f"理论平均等待时间（指数分布）: {stats['exponential_mean']:.2f}")
+
+    plot_waiting_time_histogram(waiting_times, log_scale=False, n_flips=n_flips)
+    plot_waiting_time_histogram(waiting_times, log_scale=True, n_flips=n_flips)
+
+    return waiting_times, stats
+
+
+if __name__ == "__main__":
+    np.random.seed(42)
+
+    waiting_times_1k, stats_1k = run_experiment(1000, "任务一：1000 次抛硬币")
+    
+    print("\n")
+    waiting_times_1m, stats_1m = run_experiment(1000000, "任务二：1,000,000 次抛硬币")
