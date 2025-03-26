@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
 plt.rcParams['font.sans-serif'] = ['SimHei']
-
 plt.rcParams['axes.unicode_minus'] = False
 
 
@@ -42,13 +41,13 @@ def plot_multiple_walks():
 
     plt.tight_layout()
 
+
 num_simulations = 1000
 steps = 1000
 all_r_squared = []
 for _ in range(num_simulations):
     r_squared, _ = random_walk_2d(steps)
     all_r_squared.append(r_squared)
-
 
 msd = np.mean(all_r_squared, axis=0)
 
@@ -72,6 +71,9 @@ plt.grid(True)
 slope, intercept, r_value, p_value, std_err = linregress(step_counts, msd_values)
 print(f"均方位移与步数的定量关系：均方位移 = {slope:.2f} * 步数 + {intercept:.2f}")
 print(f"拟合的相关系数 r = {r_value:.2f}")
+
+print("从理论上来说，二维随机游走的均方位移与步数呈线性关系，这是因为每一步的移动是独立的，且在各个方向上的概率相等。"
+      "通过拟合结果，我们可以看到均方位移与步数之间有较强的线性相关性，这与理论预期相符。")
 
 plt.show()
 
