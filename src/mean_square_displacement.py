@@ -2,9 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
-plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['font.family'] = 'SimHei'
 plt.rcParams['axes.unicode_minus'] = False
-
+plt.rcParams['pdf.fonttype'] = 42
+plt.rcParams['ps.fonttype'] = 42
 
 def random_walk_2d(steps):
     x_step = np.random.choice([-1, 1], steps)
@@ -14,7 +15,6 @@ def random_walk_2d(steps):
     r_squared = x ** 2 + y ** 2
     return r_squared, (x, y)
 
-
 def plot_single_walk(path):
     x_coords, y_coords = path
     plt.plot(x_coords, y_coords, marker='.')
@@ -22,7 +22,6 @@ def plot_single_walk(path):
     plt.scatter([x_coords[-1]], [y_coords[-1]], color='red', s=100, label='终点')
     plt.axis('equal')
     plt.legend()
-
 
 def plot_multiple_walks():
     fig, axes = plt.subplots(2, 2, figsize=(12, 12))
@@ -40,7 +39,6 @@ def plot_multiple_walks():
         axes[i].set_title(f'轨迹 {i + 1}')
 
     plt.tight_layout()
-
 
 num_simulations = 1000
 steps = 1000
