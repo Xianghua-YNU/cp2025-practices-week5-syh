@@ -3,17 +3,9 @@ import matplotlib.pyplot as plt
 from scipy.stats import chi2
 
 def random_walk_displacement(num_steps, num_simulations):
-    displacements = np.zeros((2, num_simulations))
-    for i in range(num_simulations):
-        x, y = 0, 0
-        for _ in range(num_steps):
-            dx = np.random.choice([-1, 1])
-            dy = np.random.choice([-1, 1])
-            x += dx
-            y += dy
-        displacements[0, i] = x
-        displacements[1, i] = y
-    return displacements
+    if num_steps <= 0 or num_simulations <= 0:
+        raise ValueError("num_steps and num_simulations must be positive integers.")
+    return np.random.choice([-1, 1], size=(2, num_simulations, num_steps)).sum(axis=2)
 
 def plot_displacement_distribution(final_displacements, bins=30):
     displacements = np.sqrt(final_displacements[0]**2 + final_displacements[1]**2)
@@ -77,9 +69,10 @@ def plot_displacement_square_distribution(final_displacements, bins=30):
 if __name__ == "__main__":
     num_steps = 1000
     num_simulations = 1000
-    bins = 30
+    bins = 30 
 
     displacements = random_walk_displacement(num_steps, num_simulations)
 
     plot_displacement_distribution(displacements, bins)
+
     plot_displacement_square_distribution(displacements, bins)
