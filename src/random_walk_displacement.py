@@ -1,62 +1,78 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import chi2
 
 def random_walk_displacement(num_steps, num_simulations):
-    """
-    模拟随机行走并返回每次模拟的最终位移
-
-    参数:
-    num_steps (int): 随机行走的步数
-    num_simulations (int): 模拟的次数
-
-    返回:
-    numpy.ndarray: 形状为(2, num_simulations)的数组，表示每次模拟的最终位移
-    """
-    # TODO: 检查输入参数的有效性
-    
-    # TODO: 实现随机行走算法
-    # 提示：
-    # 1. 使用 np.random.choice 生成随机步长 ([-1, 1])
-    # 2. 生成形状为 (2, num_simulations, num_steps) 的数组
-    # 3. 对步数维度求和得到最终位移
-    
-    pass
+    if num_steps <= 0 or num_simulations <= 0:
+        raise ValueError("num_steps and num_simulations must be positive integers.")
+    return np.random.choice([-1, 1], size=(2, num_simulations, num_steps)).sum(axis=2)
 
 def plot_displacement_distribution(final_displacements, bins=30):
-    """
-    绘制位移分布直方图
-
-    参数:
-    final_displacements (list): 包含每次模拟最终位移的列表
-    bins (int): 直方图的组数
-    """
-    # TODO: 实现位移分布的直方图绘制
-    # 1. 计算每次模拟的最终位移
-    # 2. 使用plt.hist绘制直方图
-    # 3. 添加标题和标签
-    pass
+    displacements = np.sqrt(final_displacements[0]**2 + final_displacements[1]**2)
+    plt.hist(displacements, bins=bins, density=True, alpha=0.7, color='b', label='Empirical')
+    mean_square = np.mean(displacements**2)
+    scale = np.sqrt(mean_square / 2)
+    x = np.linspace(0, np.max(displacements), 100)
+    pdf = (x / scale**2) * np.exp(-x**2 / (2 * scale**2))
+    plt.plot(x, pdf, 'r-', label='Rayleigh Fit')
+    plt.title('Random Walk Displacement Distribution')
+    plt.xlabel('Final Displacement')
+    plt.ylabel('Probability Density')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
 
 def plot_displacement_square_distribution(final_displacements, bins=30):
-    """
-    绘制位移平方分布直方图
+    displacements_square = final_displacements[0]**2 + final_displacements[1]**2
+    plt.figure(figsize=(15, 5))
+    plt.subplot(1, 3, 1)
+    plt.hist(displacements_square, bins=bins, density=True, alpha=0.7, color='b')
+    plt.title('Random Walk Displacement Square Distribution (Linear)')
+    plt.xlabel('Final Displacement Square')
+    plt.ylabel('Probability Density')
+    plt.grid(True)
 
-    参数:
-    final_displacements (list): 包含每次模拟最终位移的列表
-    bins (int): 直方图的组数
-    """
-    # TODO: 实现位移平方分布的直方图绘制
-    # 1. 计算位移平方
-    # 2. 使用plt.hist绘制直方图
-    # 3. 添加标题和标签
-    pass
+    plt.subplot(1, 3, 2)
+    plt.hist(displacements_square, bins=bins, density=True, alpha=0.7, color='b')
+    plt.yscale('log')
+    plt.title('Random Walk Displacement Square Distribution (Semi-Log)')
+    plt.xlabel('Final Displacement Square')
+    plt.ylabel('Log Probability Density')
+    plt.grid(True)
+
+    plt.subplot(1, 3, 3)
+    plt.hist(displacements_square, bins=bins, density=True, alpha=0.7, color='b')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.title('Random Walk Displacement Square Distribution (Log-Log)')
+    plt.xlabel('Log Final Displacement Square')
+    plt.ylabel('Log Probability Density')
+    plt.grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
+    df = 2
+    chi2_params = chi2.fit(displacements_square)
+    x = np.linspace(np.min(displacements_square), np.max(displacements_square), 100)
+    pdf = chi2.pdf(x, *chi2_params)
+    plt.figure()
+    plt.hist(displacements_square, bins=bins, density=True, alpha=0.7, color='b', label='Empirical')
+    plt.plot(x, pdf, 'r-', label='Chi-Square Fit')
+    plt.title('Random Walk Displacement Square Distribution with Chi-Square Fit')
+    plt.xlabel('Final Displacement Square')
+    plt.ylabel('Probability Density')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
 
 if __name__ == "__main__":
-    # 可调整的参数
-    num_steps = 1000  # 随机行走的步数
-    num_simulations = 1000  # 模拟的次数
-    bins = 30  # 直方图的组数
+    num_steps = 1000
+    num_simulations = 1000
+    bins = 30 
 
-    # TODO: 完成主程序逻辑
-    # 1. 调用random_walk_displacement获取模拟结果
-    # 2. 绘制位移分布直方图
-    # 3. 绘制位移平方分布直方图
+    displacements = random_walk_displacement(num_steps, num_simulations)
+
+    plot_displacement_distribution(displacements, bins)
+
+    plot_displacement_square_distribution(displacements, bins)
